@@ -17,6 +17,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"strconv"
 )
 
 func init() {
@@ -122,6 +123,18 @@ func tfImport(args []string, clientConfigs clients.ClientConfigs, autoApprove bo
 
 	for i, resourceDefinition := range newResourceDefinitions {
 		resourceName := fmt.Sprintf("%s.%s", resourceDefinition.Type, resourceDefinition.Name)
+		n := int64(0)
+		for _, v := range newResourceDefinitions {
+			name := string(fmt.Sprintf("%s", v.Name))
+			if string(resourceDefinition.Name) == name {
+				newName := fmt.Sprintf("_%s_%s", name, strconv.FormatInt(n, 10))
+				log.Println(string(newName))
+				n++
+				resourceName = fmt.Sprintf("%s.%s", resourceDefinition.Type, newName)
+				newResourceDefinitions = append(newResourceDefinitions, resourceDefinition)
+			}
+		}
+		log.Println(resourceName)
 		id := resourceDefinition.ImportID
 		// #nosec G204
 		cmd := exec.Command("terraform", "import", resourceName, id)

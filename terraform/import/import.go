@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/onelogin/onelogin/terraform/importables"
 	"io"
+	"log"
 	"regexp"
 	"strings"
+	"strconv"
 )
 
 // compares incoming resources from remote to what is already defined in the main.tf
@@ -62,10 +64,24 @@ func FilterExistingDefinitions(f io.Reader, resources []tfimportables.ResourceDe
 func WriteHCLDefinitionHeaders(resourceDefinitions []tfimportables.ResourceDefinition, providerDefinitions []string, planFile io.Writer) error {
 	var builder strings.Builder
 	for _, newProvider := range providerDefinitions {
+		builder.WriteString(fmt.Sprintf("terraform {\n\trequired_providers {\n\t\t%s = {\n\t\t\tsource = \"%s/%s\"\n\t\t\t}\n\t\t}\n\t}\n\n", newProvider, newProvider, newProvider))
 		builder.WriteString(fmt.Sprintf("provider %s {\n\talias = \"%s\"\n}\n\n", newProvider, newProvider))
 	}
 	for _, resourceDefinition := range resourceDefinitions {
-		builder.WriteString(fmt.Sprintf("resource %s %s {}\n", resourceDefinition.Type, resourceDefinition.Name))
+		log.Println("Before: " + string(resourceDefinition.Name))
+		i := int64(0)
+		for _, v := range resourceDefinitions {
+			name := string(fmt.Sprintf("%s", v.Name))
+			if string(resourceDefinition.Name) == name {
+				newName := fmt.Sprintf("_%s_%s", name, strconv.FormatInt(i, 10))
+				log.Println(string(newName))
+				i++
+				resourceDefinition.Name = newName
+				resourceDefinitions = append(resourceDefinitions, resourceDefinition)
+			}
+		}
+		log.Println("After: " + string(resourceDefinition.Name))
+		builder.WriteString(fmt.Sprintf("resource %s \"%s\" {}\n", resourceDefinition.Type, resourceDefinition.Name))
 	}
 	if _, err := planFile.Write([]byte(builder.String())); err != nil {
 		return err
