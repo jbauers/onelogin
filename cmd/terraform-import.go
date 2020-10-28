@@ -122,7 +122,6 @@ func tfImport(args []string, clientConfigs clients.ClientConfigs, autoApprove bo
 
 	for i, resourceDefinition := range newResourceDefinitions {
 		resourceName := fmt.Sprintf("%s._%s_%d", resourceDefinition.Type, resourceDefinition.Name, i+1)
-		log.Println(resourceName)
 		id := resourceDefinition.ImportID
 		// #nosec G204
 		cmd := exec.Command("terraform", "import", resourceName, id)
