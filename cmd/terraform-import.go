@@ -121,15 +121,7 @@ func tfImport(args []string, clientConfigs clients.ClientConfigs, autoApprove bo
 	}
 
 	for i, resourceDefinition := range newResourceDefinitions {
-		resourceName := fmt.Sprintf("%s.%s", resourceDefinition.Type, resourceDefinition.Name)
-		for _, v := range newResourceDefinitions {
-			name := string(fmt.Sprintf("%s", v.Name))
-			if string(resourceDefinition.Name) == name {
-				newName := fmt.Sprintf("_%s_%d", name, i+1)
-				resourceName = fmt.Sprintf("%s.%s", resourceDefinition.Type, newName)
-				newResourceDefinitions = append(newResourceDefinitions, resourceDefinition)
-			}
-		}
+		resourceName := fmt.Sprintf("%s._%s_%d", resourceDefinition.Type, resourceDefinition.Name, i+1)
 		log.Println(resourceName)
 		id := resourceDefinition.ImportID
 		// #nosec G204

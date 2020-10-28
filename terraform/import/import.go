@@ -66,13 +66,7 @@ func WriteHCLDefinitionHeaders(resourceDefinitions []tfimportables.ResourceDefin
 		builder.WriteString(fmt.Sprintf("provider %s {\n\talias = \"%s\"\n}\n\n", newProvider, newProvider))
 	}
 	for i, resourceDefinition := range resourceDefinitions {
-		for _, v := range resourceDefinitions {
-			name := string(fmt.Sprintf("%s", v.Name))
-			if string(resourceDefinition.Name) == name {
-				resourceDefinition.Name = fmt.Sprintf("_%s_%d", name, i+1)
-				resourceDefinitions = append(resourceDefinitions, resourceDefinition)
-			}
-		}
+		resourceDefinition.Name = fmt.Sprintf("_%s_%d", resourceDefinition.Name, i+1)
 		builder.WriteString(fmt.Sprintf("resource %s \"%s\" {}\n", resourceDefinition.Type, resourceDefinition.Name))
 	}
 	if _, err := planFile.Write([]byte(builder.String())); err != nil {

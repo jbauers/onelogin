@@ -33,19 +33,16 @@ type ResourceInstance struct {
 // so it can be flushed into main.tf
 func ConvertTFStateToHCL(state State, importables *tfimportables.ImportableList) []byte {
 	var builder strings.Builder
-	knownProviders := map[string]int{}
 
 	log.Println("Assembling main.tf...")
 
+	newProvider := "onelogin" // FIXME
+	builder.WriteString(fmt.Sprintf("terraform {\n\trequired_providers {\n\t\t%s = {\n\t\t\tsource = \"%s/%s\"\n\t\t\t}\n\t\t}\n\t}\n\n", newProvider, newProvider, newProvider))
+	builder.WriteString(fmt.Sprintf("provider %s {\n\talias = \"%s\"\n}\n\n", newProvider, newProvider))
+
 	for _, resource := range state.Resources {
-		providerDefinition := strings.Replace(resource.Provider, "provider.", "", 1)
-		if knownProviders[providerDefinition] == 0 {
-			knownProviders[providerDefinition]++
-			builder.WriteString(fmt.Sprintf("provider %s {\n\talias = \"%s\"\n}\n\n", providerDefinition, providerDefinition))
-		}
 		for _, instance := range resource.Instances {
 			builder.WriteString(fmt.Sprintf("resource %s %s {\n", resource.Type, resource.Name))
-			builder.WriteString(fmt.Sprintf("\tprovider = %s\n", providerDefinition))
 			b, _ := json.Marshal(instance.Data)
 			hclShape := importables.GetImportable(resource.Type).HCLShape()
 			json.Unmarshal(b, hclShape)
